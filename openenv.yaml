@@ -1,0 +1,34 @@
+name: "Smart Scheduling Assistant Environment"
+version: "1.0.0"
+description: "An OpenEnv-compliant environment for meeting scheduling optimization."
+author: "AI Systems Engineer"
+license: "MIT"
+action_space:
+  type: "Discrete/Structured"
+  actions:
+    - name: "schedule_meeting"
+      params: ["meetingId", "slotId"]
+    - name: "reschedule_meeting"
+      params: ["meetingId", "newSlotId"]
+    - name: "cancel_meeting"
+      params: ["meetingId"]
+    - name: "skip"
+      params: []
+observation_space:
+  type: "Box/Structured"
+  fields:
+    - "calendar"
+    - "meetings"
+    - "participants"
+    - "currentStep"
+reward_range: [-100, 100]
+tasks:
+  - id: "easy"
+    name: "Simple Scheduling"
+    difficulty: "Easy"
+  - id: "medium"
+    name: "Conflict Management"
+    difficulty: "Medium"
+  - id: "hard"
+    name: "Tight Deadlines"
+    difficulty: "Hard"

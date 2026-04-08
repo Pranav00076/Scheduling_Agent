@@ -1,0 +1,5 @@
+{
+  "name": "Smart Scheduling Assistant Environment",
+  "description": "An OpenEnv-compliant reinforcement learning environment for meeting scheduling optimization.",
+  "requestFramePermissions": []
+}
