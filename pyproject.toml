@@ -13,8 +13,12 @@ dependencies = [
     "uvicorn",
     "pydantic",
     "requests",
-    "openai"
+    "openai",
+    "openenv-core>=0.2.0"
 ]
 
 [project.optional-dependencies]
 ai = ["google-genai"]
+
+[project.scripts]
+server = "python_env.app:main"

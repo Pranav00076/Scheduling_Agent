@@ -126,8 +126,11 @@ else:
     async def web_redirect():
         return {"message": "UI not built."}
 
-if __name__ == "__main__":
+def main():
     import uvicorn
     # Hugging Face Spaces typically uses port 7860
     port = int(os.environ.get("PORT", 3000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run("python_env.app:app", host="0.0.0.0", port=port)
+
+if __name__ == "__main__":
+    main()
