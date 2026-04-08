@@ -7,9 +7,9 @@ RUN npm run build
 
 FROM python:3.11-slim
 WORKDIR /app
-COPY python_env/requirements.txt .
+COPY server/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY python_env/ .
+COPY server/ .
 COPY --from=frontend-builder /app/dist /app/dist
 
 EXPOSE 7860
