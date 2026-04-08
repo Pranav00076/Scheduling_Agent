@@ -19,7 +19,7 @@ const env = new SchedulingEnvironment();
 
 // OpenEnv Endpoints
 app.post('/reset', (req, res) => {
-  const { taskId } = req.body;
+  const taskId = req.body?.taskId || 'easy';
   const observation = env.reset(taskId);
   res.json(observation);
 });

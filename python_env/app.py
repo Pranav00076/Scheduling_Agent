@@ -30,8 +30,9 @@ class AiStepRequest(BaseModel):
     observation: Dict[str, Any]
 
 @app.post("/reset", response_model=Observation)
-async def reset(request: ResetRequest):
-    return env.reset(request.taskId)
+async def reset(request: Optional[ResetRequest] = None):
+    task_id = request.taskId if request else "easy"
+    return env.reset(task_id)
 
 @app.post("/step")
 async def step(request: StepRequest):
