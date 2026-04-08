@@ -21,4 +21,4 @@ dependencies = [
 ai = ["google-genai"]
 
 [project.scripts]
-server = "python_env.app:main"
+server = "server.app:main"
