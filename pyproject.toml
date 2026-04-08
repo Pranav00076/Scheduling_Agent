@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smart-scheduling-assistant"
+version = "1.0.0"
+description = "An OpenEnv-compliant environment for meeting scheduling optimization."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "requests",
+    "openai"
+]
+
+[project.optional-dependencies]
+ai = ["google-genai"]
