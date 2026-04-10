@@ -6,9 +6,9 @@ from typing import List, Optional
 from openai import OpenAI
 
 # Required environment variables
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
-API_BASE_URL = os.getenv("API_BASE_URL") or "https://router.huggingface.co/v1"
-MODEL_NAME = os.getenv("MODEL_NAME") or "Qwen/Qwen2.5-72B-Instruct"
+API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
 
 ENV_BASE_URL = os.getenv("ENV_BASE_URL", "http://localhost:3000")
 TASK_NAME = os.getenv("TASK_NAME", "easy")
@@ -84,13 +84,23 @@ def run_inference(task_id="easy"):
             try:
                 completion = client.chat.completions.create(
                     model=MODEL_NAME,
-                    messages=[{"role": "user", "content": prompt}],
-                    response_format={"type": "json_object"}
+                    messages=[{"role": "user", "content": prompt}]
                 )
-                response_text = completion.choices[0].message.content
+                response_text = completion.choices[0].message.content.strip()
+                
+                # Strip markdown code blocks if present
+                if response_text.startswith("```json"):
+                    response_text = response_text[7:]
+                if response_text.startswith("```"):
+                    response_text = response_text[3:]
+                if response_text.endswith("```"):
+                    response_text = response_text[:-3]
+                response_text = response_text.strip()
+                
                 action = json.loads(response_text)
                 action_str = json.dumps(action)
             except Exception as e:
+                print(f"[DEBUG] LLM call or parsing failed: {e}", flush=True)
                 error_msg = str(e)
                 # Fallback to a valid action if LLM fails
                 meeting = next((m for m in observation.get('meetings', []) if not m.get('scheduledSlotId')), None)

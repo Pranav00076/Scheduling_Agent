@@ -5,49 +5,26 @@ colorFrom: blue
 colorTo: indigo
 sdk: docker
 pinned: false
-app_file: app.py
 ---
 
-# Smart Scheduling Assistant Environment
+# Smart Scheduling Assistant
 
-An OpenEnv-compliant environment for training and evaluating AI agents on meeting scheduling tasks.
+This is an OpenEnv-compliant Reinforcement Learning environment for scheduling meetings.
 
-## Environment Description
+## Overview
+The environment simulates a calendar where an AI agent must schedule a list of meetings into available slots without conflicts, respecting participant availability and meeting deadlines.
 
-The environment simulates a scheduling assistant that must manage multiple participants' calendars, meeting priorities, and deadlines.
+## Running Locally
 
-## Action Space
+### Node.js Backend + React Frontend
+```bash
+npm install
+npm run dev
+```
 
-- `schedule_meeting(meetingId, slotId)`: Assign a meeting to a specific time slot.
-- `reschedule_meeting(meetingId, newSlotId)`: Move an already scheduled meeting.
-- `cancel_meeting(meetingId)`: Remove a meeting from the schedule.
-- `skip()`: Do nothing for the current step.
-
-## Observation Space
-
-- `calendar`: List of time slots with availability status.
-- `meetings`: List of meetings to be scheduled with priorities and deadlines.
-- `participants`: List of participants and their specific availability.
-- `currentStep`: Current step in the episode.
-- `maxSteps`: Maximum steps allowed.
-
-## Tasks
-
-1. **Easy**: 2 meetings, 2 participants, no conflicts.
-2. **Medium**: 4 meetings, 3 participants, overlapping availability.
-3. **Hard**: 4 meetings, 4 participants, tight deadlines, limited slots.
-
-## Setup Instructions
-
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Run the server:
-   ```bash
-   uvicorn app:app --host 0.0.0.0 --port 3000
-   ```
-
-## Example Usage
-
-See `inference.py` for a baseline implementation using an OpenAI-compatible client.
+### Python FastAPI Backend
+```bash
+cd python_env
+pip install -r requirements.txt
+python app.py
+```

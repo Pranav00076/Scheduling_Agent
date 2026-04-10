@@ -51,7 +51,7 @@ export default function App() {
       await step(action);
     } catch (err: any) {
       console.error("AI Agent Error:", err);
-      const errorMessage = err.response?.data?.error || err.message || "Unknown error occurred";
+      const errorMessage = err.response?.data?.detail || err.response?.data?.error || err.message || "Unknown error occurred";
       alert(`AI Agent Error: ${errorMessage}`);
     }
     setAiThinking(false);
