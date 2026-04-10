@@ -1,45 +1,30 @@
 """
 Smart Scheduling Assistant — OpenEnv RL Challenge Inference Script
-This script interacts with the OpenEnv environment and makes decisions
-using an LLM routed through the LiteLLM proxy.
+Ensures all LLM calls are routed through the LiteLLM proxy.
 """
 
 import os
 import json
 import requests
-import httpx
 from typing import List, Optional
 from openai import OpenAI
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Environment Variables (Injected by OpenEnv Validator)
+# Required Environment Variables (Injected by OpenEnv Validator)
 # ──────────────────────────────────────────────────────────────────────────────
 
-API_BASE_URL = os.getenv("API_BASE_URL")
-API_KEY = os.getenv("API_KEY")
-MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
+API_BASE_URL = os.environ["API_BASE_URL"]
+API_KEY = os.environ["API_KEY"]
+MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+ENV_BASE_URL = os.environ.get("ENV_BASE_URL", "http://localhost:3000")
+TASK_NAME = os.environ.get("TASK_NAME", "easy")
 
-# Fallbacks for local development only
-if not API_BASE_URL:
-    API_BASE_URL = "https://router.huggingface.co/v1"
-
-if not API_KEY:
-    API_KEY = "sk-dummy-token-for-local-testing"
-
-ENV_BASE_URL = os.getenv("ENV_BASE_URL", "http://localhost:3000")
-TASK_NAME = os.getenv("TASK_NAME", "easy")
 BENCHMARK = "smart-scheduling-assistant"
 
-# ──────────────────────────────────────────────────────────────────────────────
-# OpenAI Client Initialization
-# ──────────────────────────────────────────────────────────────────────────────
-
-http_client = httpx.Client(timeout=60.0)
-
+# Initialize OpenAI client using LiteLLM proxy
 client = OpenAI(
     base_url=API_BASE_URL,
-    api_key=API_KEY,
-    http_client=http_client
+    api_key=API_KEY
 )
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -53,7 +38,8 @@ def log_step(step: int, action: str, reward: float, done: bool, error: Optional[
     error_val = error if error else "null"
     done_val = str(done).lower()
     print(
-        f"[STEP] step={step} action={action} reward={reward:.2f} done={done_val} error={error_val}",
+        f"[STEP] step={step} action={action} reward={reward:.2f} "
+        f"done={done_val} error={error_val}",
         flush=True,
     )
 
@@ -66,43 +52,40 @@ def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> No
     )
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Helper Function to Call the LLM
+# LLM Call Helper
 # ──────────────────────────────────────────────────────────────────────────────
 
 def get_llm_action(prompt: str) -> dict:
-    """Calls the LLM via the LiteLLM proxy and returns a JSON action."""
-    completion = client.chat.completions.create(
+    """Call the LLM through the LiteLLM proxy."""
+    response = client.chat.completions.create(
         model=MODEL_NAME,
         messages=[
             {
                 "role": "system",
-                "content": "You are an intelligent scheduling assistant that outputs valid JSON."
+                "content": "You are an intelligent scheduling assistant. Respond only with valid JSON."
             },
-            {"role": "user", "content": prompt},
+            {"role": "user", "content": prompt}
         ],
         temperature=0,
     )
 
-    response_text = completion.choices[0].message.content.strip()
+    content = response.choices[0].message.content.strip()
 
     # Remove markdown formatting if present
-    if response_text.startswith("```json"):
-        response_text = response_text[7:]
-    if response_text.startswith("```"):
-        response_text = response_text[3:]
-    if response_text.endswith("```"):
-        response_text = response_text[:-3]
+    if content.startswith("```json"):
+        content = content[7:]
+    if content.startswith("```"):
+        content = content[3:]
+    if content.endswith("```"):
+        content = content[:-3]
 
-    response_text = response_text.strip()
-
-    return json.loads(response_text)
+    return json.loads(content.strip())
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Inference Logic
 # ──────────────────────────────────────────────────────────────────────────────
 
 def run_inference(task_id: str = "easy"):
-    """Runs the agent for a specific task."""
     log_start(task=task_id, env=BENCHMARK, model=MODEL_NAME)
 
     rewards: List[float] = []
@@ -111,20 +94,19 @@ def run_inference(task_id: str = "easy"):
     success = False
 
     try:
-        # Reset environment
-        response = requests.post(
+        # Reset Environment
+        reset_response = requests.post(
             f"{ENV_BASE_URL}/reset",
             json={"taskId": task_id},
             timeout=30,
         )
-        response.raise_for_status()
-        observation = response.json()
+        reset_response.raise_for_status()
+        observation = reset_response.json()
         done = False
 
         while not done and steps_taken < 10:
             steps_taken += 1
 
-            # Construct prompt
             prompt = f"""
 You are a smart scheduling assistant.
 
@@ -137,41 +119,21 @@ Available Actions:
 3. {{"type": "cancel_meeting", "meetingId": "..."}}
 4. {{"type": "skip"}}
 
-Respond ONLY with a valid JSON object representing the best action.
+Respond ONLY with a valid JSON object.
 """
 
             error_msg: Optional[str] = None
 
-            # Get action from LLM
+            # Call LLM via proxy
             try:
                 action = get_llm_action(prompt)
                 action_str = json.dumps(action)
             except Exception as e:
                 error_msg = str(e)
-                # Fallback heuristic
-                meeting = next(
-                    (m for m in observation.get("meetings", [])
-                     if not m.get("scheduledSlotId")),
-                    None,
-                )
-                slot = next(
-                    (s for s in observation.get("calendar", [])
-                     if s.get("isAvailable")),
-                    None,
-                )
-
-                if meeting and slot:
-                    action = {
-                        "type": "schedule_meeting",
-                        "meetingId": meeting["id"],
-                        "slotId": slot["id"],
-                    }
-                else:
-                    action = {"type": "skip"}
-
+                action = {"type": "skip"}
                 action_str = json.dumps(action)
 
-            # Step environment
+            # Step Environment
             try:
                 step_response = requests.post(
                     f"{ENV_BASE_URL}/step",
@@ -196,16 +158,9 @@ Respond ONLY with a valid JSON object representing the best action.
                 done = True
 
             rewards.append(reward_val)
+            log_step(steps_taken, action_str, reward_val, done, error_msg)
 
-            log_step(
-                step=steps_taken,
-                action=action_str,
-                reward=reward_val,
-                done=done,
-                error=error_msg,
-            )
-
-        # Get final grade
+        # Get Final Grade
         try:
             grade_response = requests.post(
                 f"{ENV_BASE_URL}/grade",
@@ -223,16 +178,12 @@ Respond ONLY with a valid JSON object representing the best action.
         print(f"[DEBUG] Unhandled exception: {e}", flush=True)
 
     finally:
-        log_end(
-            success=success,
-            steps=steps_taken,
-            score=score,
-            rewards=rewards,
-        )
+        log_end(success, steps_taken, score, rewards)
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Entry Point
 # ──────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    run_inference(TASK_NAME)
+    run_inference(os.environ.get("TASK_NAME", "easy"))
