@@ -6,9 +6,9 @@ from typing import List, Optional
 from openai import OpenAI
 
 # Required environment variables
-API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN")
-API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
+HF_TOKEN = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
+API_BASE_URL = os.getenv("API_BASE_URL") or "https://router.huggingface.co/v1"
+MODEL_NAME = os.getenv("MODEL_NAME") or "Qwen/Qwen2.5-72B-Instruct"
 
 ENV_BASE_URL = os.getenv("ENV_BASE_URL", "http://localhost:3000")
 TASK_NAME = os.getenv("TASK_NAME", "easy")
@@ -30,21 +30,10 @@ def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> No
     print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
 
 def run_inference(task_id="easy"):
-    # Fix for TypeError: Client.__init__() got an unexpected keyword argument
-    # By providing our own httpx.Client(), we bypass the buggy default initialization in older openai versions
-    try:
-        http_client = httpx.Client()
-        client = OpenAI(
-            base_url=API_BASE_URL,
-            api_key=API_KEY or "dummy",
-            http_client=http_client
-        )
-    except Exception as e:
-        print(f"[DEBUG] Failed to initialize OpenAI client with httpx: {e}")
-        client = OpenAI(
-            base_url=API_BASE_URL,
-            api_key=API_KEY or "dummy"
-        )
+    client = OpenAI(
+        base_url=API_BASE_URL,
+        api_key=HF_TOKEN
+    )
 
     log_start(task=task_id, env=BENCHMARK, model=MODEL_NAME)
     
