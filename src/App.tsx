@@ -51,7 +51,17 @@ export default function App() {
       await step(action);
     } catch (err: any) {
       console.error("AI Agent Error:", err);
-      const errorMessage = err.response?.data?.detail || err.response?.data?.error || err.message || "Unknown error occurred";
+      let errorMessage = "Unknown error occurred";
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          // If it's an HTML page (e.g. from Hugging Face router), show a snippet
+          errorMessage = err.response.data.substring(0, 100) + "...";
+        } else {
+          errorMessage = err.response.data.detail || err.response.data.error || JSON.stringify(err.response.data);
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
       alert(`AI Agent Error: ${errorMessage}`);
     }
     setAiThinking(false);
