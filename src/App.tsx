@@ -3,7 +3,7 @@ import { Calendar, Users, Clock, CheckCircle2, AlertCircle, Play, RotateCcw, Che
 import { motion, AnimatePresence } from 'motion/react';
 import axios from 'axios';
 
-const API_BASE_URL = ''; // Same host
+const API_BASE_URL = ''; // Relative path to hit the same host
 
 export default function App() {
   const [observation, setObservation] = useState<any>(null);
