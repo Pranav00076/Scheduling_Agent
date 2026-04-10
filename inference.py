@@ -6,6 +6,7 @@ Ensures all LLM calls are routed through the LiteLLM proxy.
 import os
 import json
 import requests
+import httpx
 from typing import List, Optional
 from openai import OpenAI
 
@@ -33,7 +34,7 @@ except Exception as e:
     print(f"[DEBUG] Failed to initialize OpenAI client with httpx: {e}")
     client = OpenAI(
         base_url=API_BASE_URL,
-        api_key=HF_TOKEN or "dummy"
+        api_key=API_KEY or "dummy"
     )
 
 # ──────────────────────────────────────────────────────────────────────────────
