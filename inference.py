@@ -30,10 +30,19 @@ def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> No
     print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
 
 def run_inference(task_id="easy"):
-    client = OpenAI(
-        base_url=API_BASE_URL,
-        api_key=HF_TOKEN
-    )
+    try:
+        http_client = httpx.Client()
+        client = OpenAI(
+            base_url=API_BASE_URL,
+            api_key=HF_TOKEN or "dummy",
+            http_client=http_client
+        )
+    except Exception as e:
+        print(f"[DEBUG] Failed to initialize OpenAI client with httpx: {e}")
+        client = OpenAI(
+            base_url=API_BASE_URL,
+            api_key=HF_TOKEN or "dummy"
+        )
 
     log_start(task=task_id, env=BENCHMARK, model=MODEL_NAME)
     
