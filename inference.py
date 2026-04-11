@@ -14,8 +14,8 @@ from openai import OpenAI
 # ──────────────────────────────────────────────────────────────────────────────
 
 API_BASE_URL = os.environ["API_BASE_URL"]
-API_KEY = os.environ["API_KEY"]
-MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+API_KEY = os.environ["API_KEY"] or os.environ.get("HF_TOKEN")
+MODEL_NAME = os.environ.get("MODEL_NAME")
 ENV_BASE_URL = os.environ.get("ENV_BASE_URL", "http://localhost:3000")
 TASK_NAME = os.environ.get("TASK_NAME", "easy")
 
@@ -30,6 +30,16 @@ client = OpenAI(
 # Debug logs to verify proxy usage
 print(f"[DEBUG] Using API_BASE_URL: {API_BASE_URL}", flush=True)
 print(f"[DEBUG] Using MODEL_NAME: {MODEL_NAME}", flush=True)
+print("Using LiteLLM Proxy:", os.environ["API_BASE_URL"], flush=True)
+
+def test_llm_connection():
+    response = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[{"role": "user", "content": "Return JSON: {\"status\": \"ok\"}"}],
+        response_format={"type": "json_object"}
+    )
+    print("[DEBUG] Proxy call successful:", response.choices[0].message.content, flush=True)
+test_llm_connection()
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Logging Functions (Required by OpenEnv)
