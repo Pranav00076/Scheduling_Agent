@@ -216,13 +216,8 @@ Respond ONLY with a valid JSON object.
 # ──────────────────────────────────────────────────────────────────────────────
 # Entry Point
 # ──────────────────────────────────────────────────────────────────────────────
+TASKS = ["easy", "medium", "hard"]
 
 if __name__ == "__main__":
-    async def main():
-        tasks = ["easy", "medium", "hard"]
-        for task in tasks:
-            try:
-                await run_inference(task)
-            except Exception as e:
-                print(f"[ERROR] Task {task} failed: {e}", flush=True)
-                log_end(False, 0, 0.001, [0.001])
+    for task in TASKS:
+        run_inference(task)
