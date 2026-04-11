@@ -219,5 +219,6 @@ Respond ONLY with a valid JSON object.
 TASKS = ["easy", "medium", "hard"]
 
 if __name__ == "__main__":
+    test_llm_connection()
     for task in TASKS:
         run_inference(task)
