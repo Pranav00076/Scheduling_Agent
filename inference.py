@@ -42,14 +42,25 @@ print(f"[DEBUG] Using MODEL_NAME: {MODEL_NAME}", flush=True)
 print("Using LiteLLM Proxy:", os.environ["API_BASE_URL"], flush=True)
 
 def test_llm_connection():
-    response = client.chat.completions.create(
-        model=MODEL_NAME,
-        messages=[{"role": "user", "content": "Return JSON: {\"status\": \"ok\"}"}],
-        response_format={"type": "json_object"}
-    )
-    print("[DEBUG] Proxy call successful:", response.choices[0].message.content, flush=True)
-test_llm_connection()
+    import os
+    from openai import OpenAI
 
+    base_url = os.environ["API_BASE_URL"]
+    api_key = os.environ["API_KEY"]
+    model = os.environ["MODEL_NAME"]
+
+    print(f"[DEBUG] BASE_URL: {base_url}", flush=True)
+    print(f"[DEBUG] MODEL: {model}", flush=True)
+
+    client = OpenAI(base_url=base_url, api_key=api_key)
+
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": "Return JSON: {\"status\": \"ok\"}"}],
+        temperature=0,
+    )
+
+    print("[DEBUG] LLM Response:", response.choices[0].message.content, flush=True)
 # ──────────────────────────────────────────────────────────────────────────────
 # Logging Functions (Required by OpenEnv)
 # ──────────────────────────────────────────────────────────────────────────────
@@ -213,4 +224,5 @@ Respond ONLY with a valid JSON object.
 # ──────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    test_llm_connection()
     run_inference(TASK_NAME)
