@@ -41,26 +41,20 @@ print(f"[DEBUG] Using API_BASE_URL: {API_BASE_URL}", flush=True)
 print(f"[DEBUG] Using MODEL_NAME: {MODEL_NAME}", flush=True)
 print("Using LiteLLM Proxy:", os.environ["API_BASE_URL"], flush=True)
 
+from openai import AuthenticationError
+
 def test_llm_connection():
-    import os
-    from openai import OpenAI
-
-    base_url = os.environ["API_BASE_URL"]
-    api_key = os.environ["API_KEY"]
-    model = os.environ.get["MODEL_NAME"]
-
-    print(f"[DEBUG] BASE_URL: {base_url}", flush=True)
-    print(f"[DEBUG] MODEL: {model}", flush=True)
-
-    client = OpenAI(base_url=base_url, api_key=api_key)
-
-    response = client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": "Return JSON: {\"status\": \"ok\"}"}],
-        temperature=0,
-    )
-
-    print("[DEBUG] LLM Response:", response.choices[0].message.content, flush=True)
+    try:
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[{"role": "user", "content": "Return JSON: {\"status\": \"ok\"}"}],
+            temperature=0,
+        )
+        print("[DEBUG] LLM Response:", response.choices[0].message.content, flush=True)
+    except AuthenticationError:
+        print("[WARNING] Authentication failed. This is expected with a dummy key.", flush=True)
+    except Exception as e:
+        print(f"[ERROR] LLM test failed: {e}", flush=True)
 # ──────────────────────────────────────────────────────────────────────────────
 # Logging Functions (Required by OpenEnv)
 # ──────────────────────────────────────────────────────────────────────────────
