@@ -119,7 +119,7 @@ def run_inference(task_id: str = "easy"):
 
     rewards: List[float] = []
     steps_taken = 0
-    score = 0.0
+    score = 0.1
     success = False
 
     try:
@@ -176,16 +176,16 @@ Respond ONLY with a valid JSON object.
                 observation = step_data.get("observation", observation)
                 done = step_data.get("done", True)
 
-                reward_data = step_data.get("reward", 0.0)
+                reward_data = step_data.get("reward", 0.1)
                 reward_val = (
-                    float(reward_data.get("value", 0.0))
+                    float(reward_data.get("value", 0.1))
                     if isinstance(reward_data, dict)
                     else float(reward_data)
                 )
 
             except Exception as e:
                 error_msg = str(e)
-                reward_val = 0.0
+                reward_val = 0.1
                 done = True
 
             rewards.append(reward_val)
@@ -198,10 +198,10 @@ Respond ONLY with a valid JSON object.
                 timeout=30,
             )
             grade_response.raise_for_status()
-            score = float(grade_response.json().get("score", 0.0))
+            score = float(grade_response.json().get("score", 0.1))
         except Exception as e:
             print(f"[ERROR] Grade fetch failed: {e}", flush=True)
-            score = 0.0
+            score = 0.1
 
         score = max(0.1, min(score, 0.9))
         success = score >= 0.2
