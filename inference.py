@@ -218,5 +218,11 @@ Respond ONLY with a valid JSON object.
 # ──────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    test_llm_connection()
-    run_inference(TASK_NAME)
+    async def main():
+        tasks = ["easy", "medium", "hard"]
+        for task in tasks:
+            try:
+                await run_inference(task)
+            except Exception as e:
+                print(f"[ERROR] Task {task} failed: {e}", flush=True)
+                log_end(False, 0, 0.001, [0.001])
