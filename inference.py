@@ -6,12 +6,11 @@ Ensures all LLM calls are routed through the LiteLLM proxy.
 import os
 import json
 import requests
-import httpx
 from typing import List, Optional
 from openai import OpenAI
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Required Environment Variables (Injected by OpenEnv Validator)
+# Required Environment Variables
 # ──────────────────────────────────────────────────────────────────────────────
 
 API_BASE_URL = os.environ["API_BASE_URL"]
@@ -23,19 +22,14 @@ TASK_NAME = os.environ.get("TASK_NAME", "easy")
 BENCHMARK = "smart-scheduling-assistant"
 
 # Initialize OpenAI client using LiteLLM proxy
-try:
-    http_client = httpx.Client()
-    client = OpenAI(
-        base_url=API_BASE_URL,
-        api_key=API_KEY or "dummy",
-        http_client=http_client
-    )
-except Exception as e:
-    print(f"[DEBUG] Failed to initialize OpenAI client with httpx: {e}")
-    client = OpenAI(
-        base_url=API_BASE_URL,
-        api_key=API_KEY or "dummy"
-    )
+client = OpenAI(
+    base_url=API_BASE_URL,
+    api_key=API_KEY
+)
+
+# Debug logs to verify proxy usage
+print(f"[DEBUG] Using API_BASE_URL: {API_BASE_URL}", flush=True)
+print(f"[DEBUG] Using MODEL_NAME: {MODEL_NAME}", flush=True)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Logging Functions (Required by OpenEnv)
@@ -72,7 +66,8 @@ def get_llm_action(prompt: str) -> dict:
         messages=[
             {
                 "role": "system",
-                "content": "You are an intelligent scheduling assistant. Respond only with valid JSON."
+                "content": "You are an intelligent scheduling assistant. "
+                           "Respond ONLY with a valid JSON object."
             },
             {"role": "user", "content": prompt}
         ],
@@ -134,12 +129,13 @@ Respond ONLY with a valid JSON object.
 
             error_msg: Optional[str] = None
 
-            # Call LLM via proxy
+            # Call LLM via LiteLLM proxy
             try:
                 action = get_llm_action(prompt)
                 action_str = json.dumps(action)
             except Exception as e:
                 error_msg = str(e)
+                print(f"[ERROR] LLM call failed: {error_msg}", flush=True)
                 action = {"type": "skip"}
                 action_str = json.dumps(action)
 
@@ -157,10 +153,11 @@ Respond ONLY with a valid JSON object.
                 done = step_data.get("done", True)
 
                 reward_data = step_data.get("reward", 0.0)
-                if isinstance(reward_data, dict):
-                    reward_val = float(reward_data.get("value", 0.0))
-                else:
-                    reward_val = float(reward_data)
+                reward_val = (
+                    float(reward_data.get("value", 0.0))
+                    if isinstance(reward_data, dict)
+                    else float(reward_data)
+                )
 
             except Exception as e:
                 error_msg = str(e)
@@ -178,7 +175,8 @@ Respond ONLY with a valid JSON object.
             )
             grade_response.raise_for_status()
             score = float(grade_response.json().get("score", 0.0))
-        except Exception:
+        except Exception as e:
+            print(f"[ERROR] Grade fetch failed: {e}", flush=True)
             score = 0.0
 
         score = max(0.0, min(score, 1.0))
@@ -196,4 +194,4 @@ Respond ONLY with a valid JSON object.
 # ──────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    run_inference(os.environ.get("TASK_NAME", "easy"))
+    run_inference(TASK_NAME)
