@@ -47,7 +47,7 @@ def test_llm_connection():
 
     base_url = os.environ["API_BASE_URL"]
     api_key = os.environ["API_KEY"]
-    model = os.environ["MODEL_NAME"]
+    model = os.environ.get["MODEL_NAME"]
 
     print(f"[DEBUG] BASE_URL: {base_url}", flush=True)
     print(f"[DEBUG] MODEL: {model}", flush=True)
