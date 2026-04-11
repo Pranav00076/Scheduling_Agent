@@ -23,11 +23,19 @@ TASK_NAME = os.environ.get("TASK_NAME", "easy")
 BENCHMARK = "smart-scheduling-assistant"
 
 # Initialize OpenAI client using LiteLLM proxy
-client = OpenAI(
-    base_url=API_BASE_URL,
-    api_key=API_KEY
-)
-
+try:
+    http_client = httpx.Client()
+    client = OpenAI(
+        base_url=API_BASE_URL,
+        api_key=API_KEY,
+        http_client=http_client
+    )
+except Exception as e:
+    print(f"[DEBUG] Failed to initialize OpenAI client with httpx: {e}")
+    client = OpenAI(
+        base_url=API_BASE_URL,
+        api_key=API_KEY
+    )
 # Debug logs to verify proxy usage
 print(f"[DEBUG] Using API_BASE_URL: {API_BASE_URL}", flush=True)
 print(f"[DEBUG] Using MODEL_NAME: {MODEL_NAME}", flush=True)
