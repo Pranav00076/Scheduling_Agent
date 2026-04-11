@@ -6,6 +6,7 @@ Ensures all LLM calls are routed through the LiteLLM proxy.
 import os
 import json
 import requests
+import httpx
 from typing import List, Optional
 from openai import OpenAI
 
