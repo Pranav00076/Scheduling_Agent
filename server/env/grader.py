@@ -1,6 +1,6 @@
 from .models import Observation
 
-EPSILON = 1e-3  # Ensures scores stay strictly within (0, 1)
+EPSILON = 0.1  # Ensures scores stay strictly within (0, 1)
 
 def calculate_reward(observation: Observation) -> float:
     meetings = observation.meetings

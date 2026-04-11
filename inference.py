@@ -203,8 +203,8 @@ Respond ONLY with a valid JSON object.
             print(f"[ERROR] Grade fetch failed: {e}", flush=True)
             score = 0.0
 
-        score = max(0.0, min(score, 1.0))
-        success = score >= 0.1
+        score = max(0.1, min(score, 0.9))
+        success = score >= 0.2
 
     except Exception as e:
         print(f"[DEBUG] Unhandled exception: {e}", flush=True)
